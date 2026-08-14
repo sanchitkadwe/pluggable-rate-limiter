@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pluggable-rate-limiter"
+version = "0.1.0"
+description = "A distributed, pluggable, YAML-configurable Rate Limiter library and server in Python"
+readme = "README.md"
+authors = [{ name = "Sanchit" }]
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.28.0",
+    "redis>=5.0.1",
+    "pyyaml>=6.0.1",
+    "pydantic>=2.6.0",
+    "httpx>=0.27.0",
+    "rich>=13.7.0"
+]
+
+[project.scripts]
+rate-limiter = "rate_limiter.cli:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src", "."]

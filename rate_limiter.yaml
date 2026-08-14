@@ -1,0 +1,75 @@
+version: "1.0"
+
+storage:
+  type: "redis"
+  redis_url: "redis://localhost:6379/0"
+  fallback_to_memory: true
+  key_prefix: "ratelimit"
+  connection_timeout: 2.0
+
+default_algorithm: "token_bucket"
+default_max_requests: 30
+default_window_seconds: 60.0
+default_burst_capacity: 30
+
+extractor:
+  type: "ip"
+  use_x_forwarded_for: true
+  header_name: "X-API-Key"
+
+headers:
+  include_headers: true
+  limit_header: "X-RateLimit-Limit"
+  remaining_header: "X-RateLimit-Remaining"
+  reset_header: "X-RateLimit-Reset"
+  retry_after_header: "Retry-After"
+
+rules:
+  - name: "get_data_rule"
+    path: "/api/data"
+    methods: ["GET"]
+    algorithm: "token_bucket"
+    max_requests: 10
+    window_seconds: 30.0
+    burst_capacity: 10
+
+  - name: "post_data_rule"
+    path: "/api/data"
+    methods: ["POST"]
+    algorithm: "fixed_window"
+    max_requests: 5
+    window_seconds: 30.0
+
+  - name: "put_resource_rule"
+    path: "/api/resource/*"
+    methods: ["PUT"]
+    algorithm: "sliding_window_counter"
+    max_requests: 3
+    window_seconds: 30.0
+
+  - name: "patch_resource_rule"
+    path: "/api/resource/*"
+    methods: ["PATCH"]
+    algorithm: "leaky_bucket"
+    max_requests: 2
+    window_seconds: 30.0
+    leak_rate: 0.1
+    burst_capacity: 2
+
+  - name: "delete_resource_rule"
+    path: "/api/resource/*"
+    methods: ["DELETE"]
+    algorithm: "sliding_window_log"
+    max_requests: 1
+    window_seconds: 30.0
+
+  - name: "unlimited_rule"
+    path: "/api/unlimited"
+    methods: ["*"]
+    algorithm: "token_bucket"
+    max_requests: 1000
+    window_seconds: 60.0
+    burst_capacity: 1000
+
+hot_reload: true
+poll_interval_seconds: 2.0
